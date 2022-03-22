@@ -81,6 +81,7 @@ def reduce_points():
       filename_ply = os.path.join(src_folder, filename)
       filename_reduced_ply = os.path.join(src_folder, filename[:-4] + '_REDUCED.ply')
       filename_reduced = os.path.join(des_folder, filename[:-4] + '.ply')
+      if Path(filename_reduced_ply).is_file(): continue # skip if reduced file exists
       cmd = 'python reduce_points2.py --cloudcompare %s --file %s --target %s' % (cloudcompare, filename_ply, str(target))
       print(cmd)
       os.system(cmd)
