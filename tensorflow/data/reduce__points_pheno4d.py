@@ -154,6 +154,6 @@ if __name__ == '__main__':
   check_cloudcompare()
   modify_ply_header_cc()
   reduce_points()
-  # shutil.rmtree(cc_header_folder)
+  shutil.rmtree(cc_header_folder)
   modify_ply_header()
   compute_stats()
