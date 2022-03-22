@@ -15,16 +15,20 @@ target = args.target
 
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 current_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-root_folder = os.path.join(current_path, 'script/dataset/shapenet_segmentation')
+#root_folder = os.path.join(current_path, 'script/dataset/shapenet_segmentation')
+root_folder = os.path.join(current_path, 'script/dataset/pheno4d_segmentation')
 dataset_folder = 'ply'
 ply_folder = os.path.join(root_folder, dataset_folder)
 reduced_folder = os.path.join(root_folder, 'ply_reduced_' + str(target))
 cc_header_folder = os.path.join(root_folder, 'cc_header')
-cloudcompare = 'cloudcompare.CloudCompare'
+#cloudcompare = 'cloudcompare.CloudCompare'
+cloudcompare = 'D:\Code\Research\O-CNN\cloudcompare\CloudCompare_v2.12.beta_bin_x64\CloudCompare.exe'
 
 # categories = ['Maize01', 'Maize02', 'Maize03', 'Maize04', 'Maize05', 'Maize06', 'Maize07',
 #               'Tomato01', 'Tomato02', 'Tomato03', 'Tomato04', 'Tomato05', 'Tomato06', 'Tomato07']
 categories = ['Maize', 'Tomato']
+
+unprocessed = []
 
 def check_cloudcompare():
   if not(Path(cloudcompare).is_file()):
@@ -80,6 +84,9 @@ def reduce_points():
       cmd = 'python reduce_points2.py --cloudcompare %s --file %s --target %s' % (cloudcompare, filename_ply, str(target))
       print(cmd)
       os.system(cmd)
+      if not(Path(filename_reduced_ply).is_file()):
+        unprocessed.append(filename)
+        continue
       shutil.move(filename_reduced_ply, filename_reduced)
 
 def modify_ply_header():
@@ -137,18 +144,25 @@ def compute_stats():
             min_points = min(min_points, points)
             break
   avg_points /= clouds
-  ct = datetime.datetime.now()
-  ct = str(ct).replace('-', '_').replace(':', '_').replace('.', '_')
   log_content = '\n'.join([
-    ct,
     'Point clouds: ' + str(clouds),
     'Max points: ' + str(max_points),
     'Min points: ' + str(min_points),
     'Average points: ' + str(avg_points)])
   print(log_content)
-  filename_log = os.path.join(reduced_folder, 'log_' + ct + '.txt')
+  filename_log = os.path.join(reduced_folder, 'log_reduced.txt')
   with open(filename_log, 'w') as fid:
-        fid.write(log_content)
+    fid.write(log_content)
+
+def log_unprocessed():
+  if(len(unprocessed)):
+    print('\nLog unprocesed ...')
+    log_header = 'Unprocessed files: %s' % str(len(unprocessed))
+    log_content = '\n'.join([log_header] + unprocessed)
+    print(log_content)
+    filename_log = os.path.join(reduced_folder, 'log_unprocessed.txt')
+    with open(filename_log, 'w') as fid:
+      fid.write(log_content)
 
 if __name__ == '__main__':
   check_cloudcompare()
@@ -157,3 +171,4 @@ if __name__ == '__main__':
   shutil.rmtree(cc_header_folder)
   modify_ply_header()
   compute_stats()
+  log_unprocessed()
