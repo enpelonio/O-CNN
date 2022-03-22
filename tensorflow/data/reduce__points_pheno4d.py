@@ -77,7 +77,7 @@ def reduce_points():
       filename_ply = os.path.join(src_folder, filename)
       filename_reduced_ply = os.path.join(src_folder, filename[:-4] + '_REDUCED.ply')
       filename_reduced = os.path.join(des_folder, filename[:-4] + '.ply')
-      cmd = 'python reduce_points.py --cloudcompare %s --file %s --target %s' % (cloudcompare, filename_ply, str(target))
+      cmd = 'python reduce_points2.py --cloudcompare %s --file %s --target %s' % (cloudcompare, filename_ply, str(target))
       print(cmd)
       os.system(cmd)
       shutil.move(filename_reduced_ply, filename_reduced)
