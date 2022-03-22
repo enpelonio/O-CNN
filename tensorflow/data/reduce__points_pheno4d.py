@@ -151,9 +151,9 @@ def compute_stats():
         fid.write(log_content)
 
 if __name__ == '__main__':
-  #check_cloudcompare()
-  #modify_ply_header_cc()
-  #reduce_points()
-  #shutil.rmtree(cc_header_folder)
+  check_cloudcompare()
+  modify_ply_header_cc()
+  reduce_points()
+  shutil.rmtree(cc_header_folder)
   modify_ply_header()
   compute_stats()
