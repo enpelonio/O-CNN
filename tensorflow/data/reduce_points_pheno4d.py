@@ -20,7 +20,7 @@ root_folder = os.path.join(current_path, 'script/dataset/pheno4d_segmentation')
 dataset_folder = 'ply'
 ply_folder = os.path.join(root_folder, dataset_folder)
 reduced_folder = os.path.join(root_folder, 'ply_reduced_' + str(target))
-cc_header_folder = os.path.join(root_folder, 'cc_header')
+cc_header_folder = os.path.join(root_folder, 'cc_header_' + str(target))
 #cloudcompare = 'cloudcompare.CloudCompare'
 cloudcompare = 'D:\Code\Research\O-CNN\cloudcompare\CloudCompare_v2.12.beta_bin_x64\CloudCompare.exe'
 
