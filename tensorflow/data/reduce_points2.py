@@ -101,7 +101,7 @@ def insert(root, key):
   return root
 
 if __name__ == '__main__':
-  spaces = range(0,5010,10) # where n will be n/1000
+  spaces = range(10,5010,10) # where n will be n/1000
   root = newnode(spaces[int(len(spaces)/2)]) # set middle value as root
   spaces = list(spaces)
   random.shuffle(spaces) # randomize to balance the tree
