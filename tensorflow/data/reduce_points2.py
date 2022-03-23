@@ -55,7 +55,7 @@ def maxDiffUtil(ptr, k, min_diff, min_diff_key):
         
   # If k itself is present 
   if points == k:  # if ptr.key == k:
-    min_diff_key[0] = k
+    min_diff_key[0] = ptr.key
     return
 
   # update min_diff and min_diff_key by checking current node value 
