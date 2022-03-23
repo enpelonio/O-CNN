@@ -127,6 +127,7 @@ def compute_stats():
   min_points = 10**9
   avg_points = 0
   clouds = 0
+  lines = []
   for i, c in enumerate(categories):
     src_folder = os.path.join(reduced_folder, c)
 
@@ -143,14 +144,15 @@ def compute_stats():
             avg_points += points
             max_points = max(max_points, points)
             min_points = min(min_points, points)
+            lines.append('%s %s' % (filename, nums[2]))
             break
   avg_points /= clouds
-  log_content = '\n'.join([
-    'Point clouds: ' + str(clouds),
-    'Max points: ' + str(max_points),
-    'Min points: ' + str(min_points),
-    'Average points: ' + str(avg_points)])
-  print(log_content)
+  log_header = 'Point clouds: ' + str(clouds) + \
+    '\nMax points: ' + str(max_points) + \
+    '\nMin points: ' + str(min_points) + \
+    '\nAverage points: ' + str(avg_points)
+  print(log_header)
+  log_content = '\n'.join([log_header] + lines)
   filename_log = os.path.join(reduced_folder, 'log_reduced.txt')
   with open(filename_log, 'w') as fid:
     fid.write(log_content)
