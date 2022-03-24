@@ -3,6 +3,7 @@ import os
 import re
 import random
 import shutil
+import atexit
 from pathlib import Path
 
 parser = argparse.ArgumentParser()
@@ -19,6 +20,16 @@ cloudcompare = args.cloudcompare.replace(os.sep, '/')
 filename = args.file.replace(os.sep, '/')
 current_path = os.path.dirname(filename)
 base_filename = Path(filename).stem
+
+def on_exit():
+  # delete generated subsamples
+  filenames = os.listdir(current_path)
+  for _filename in filenames:
+    subsample = '^' + base_filename + '_SPATIAL_SUBSAMPLED*'
+    if re.search(subsample, _filename):
+      filename_subsample = os.path.join(current_path, _filename)
+      os.remove(filename_subsample)
+atexit.register(on_exit)
 
 def get_vertices_count(filename):
   with open(filename, 'r') as fid:
@@ -80,13 +91,6 @@ def maxDiff(root, k):
 
   return min_diff_key[0]
 
-# A utility function to do inorder tree traversal
-def inorder(root):
-  if root:
-    inorder(root.left)
-    print(root.key)
-    inorder(root.right)
-
 # A utility function to insert a new node with the given key
 def insert(root, key):
   if root is None:
@@ -112,11 +116,3 @@ if __name__ == '__main__':
   subsample_closest = os.path.join(current_path, base_filename + '_SPATIAL_SUBSAMPLED_%s.ply' % str(closest_key))
   filename_reduced = os.path.join(current_path, base_filename + '_REDUCED.ply')
   shutil.copy(subsample_closest, filename_reduced)
-
-  # delete generated subsamples
-  filenames = os.listdir(current_path)
-  for _filename in filenames:
-    subsample = '^' + base_filename + '_SPATIAL_SUBSAMPLED*'
-    if re.search(subsample, _filename):
-      filename_subsample = os.path.join(current_path, _filename)
-      os.remove(filename_subsample)
