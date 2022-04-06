@@ -445,11 +445,11 @@ def octree_bilinear_v3(pts, data, octree, depth):
     # else:
     #   output = tf.sparse.sparse_dense_matmul(mat, data, adjoint_a=False, adjoint_b=True)
     # commented end
-    dense_mat = tf.sparse_tensor_to_dense(mat)
-    #output = tf.sparse.sparse_dense_matmul(mat, data, adjoint_a=False, adjoint_b=True)
-    output = tf.matmul(dense_mat, data, adjoint_a=False, adjoint_b=True,a_is_sparse = True)
-    #norm = tf.sparse.sparse_dense_matmul(mat, tf.ones([h, 1]))
-    norm = tf.matmul(dense_mat, tf.ones([h, 1]), a_is_sparse = True)
+    #dense_mat = tf.sparse_tensor_to_dense(mat)
+    output = tf.sparse.sparse_dense_matmul(mat, data, adjoint_a=False, adjoint_b=True)
+    #output = tf.matmul(dense_mat, data, adjoint_a=False, adjoint_b=True,a_is_sparse = True)
+    norm = tf.sparse.sparse_dense_matmul(mat, tf.ones([h, 1]))
+    #norm = tf.matmul(dense_mat, tf.ones([h, 1]), a_is_sparse = True)
     output = tf.div(output, norm + 1.0e-10) # avoid dividing by zeros
     output = tf.expand_dims(tf.expand_dims(tf.transpose(output), 0), -1)
   return output

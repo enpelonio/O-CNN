@@ -11,13 +11,13 @@ root_folder = os.path.join(current_path, 'script/dataset/shapenet_segmentation')
 ply2points = 'ply2points'
 convert_tfrecords = os.path.join(current_path, 'util/convert_tfrecords.py')
 
-txt_folder = os.path.join(root_folder, 'txt_reduced_10000_strict')
-ply_folder = os.path.join(root_folder, 'ply_reduced_10000_strict')
-points_folder = os.path.join(root_folder, 'points_reduced_10000_strict')
-dataset_folder = os.path.join(root_folder, 'datasets_reduced_10000_strict')
+txt_folder = os.path.join(root_folder, 'txt_reduced_10000_strict_byday')
+ply_folder = os.path.join(root_folder, 'ply_reduced_10000_strict_byday')
+points_folder = os.path.join(root_folder, 'points_reduced_10000_strict_byday')
+dataset_folder = os.path.join(root_folder, 'datasets_reduced_10000_strict_byday')
 
-categories= ['Tomato', 'Maize']
-seg_num   = [2, 2]
+categories= ['T01', 'T02', 'T03', 'T04', 'T05', 'T06', 'T07', 'M01', 'M02', 'M03', 'M04', 'M05', 'M06', 'M07']
+seg_num   = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
 
 
 def ply_to_points():
@@ -81,19 +81,28 @@ def getListOfFilesByDay(dirName, day):
 
 def getSafeFileNameWithoutExt(file:str):
     start_index=-1
-    try:
-      start_index = file.rindex('Tomato')
-    except:
-      start_index = file.rindex('Maize')
-
+    
+    for category in categories:
+      start_index = safeFind(file,category)
+      if start_index != -1:
+        break
     end_index = file.rindex('.')
     return file[start_index:end_index]
+
+def safeFind(string:str, substr:str):
+  res = -1
+  try:
+    res = string.find(substr)
+  except:
+    pass
+  return res
 
 def points_to_tfrecords():
   print('Convert points files to tfrecords files ...')
   if not os.path.exists(dataset_folder): os.makedirs(dataset_folder)
   list_folder     = os.path.join(txt_folder, 'train_test_split')
   if not os.path.exists(list_folder): os.makedirs(list_folder)
+  
   train_1, test_1 = split_data_by_day('01')
   train_2, test_2 = split_data_by_day('02')
   train_3, test_3 = split_data_by_day('03')
@@ -149,6 +158,6 @@ def points_to_tfrecords():
 
 if __name__ == '__main__':
   #ply_to_points()
-  #points_to_tfrecords()
+  points_to_tfrecords()
   #split_data()
-  print(getListOfFiles(points_folder))
+  #print(getListOfFiles(points_folder))

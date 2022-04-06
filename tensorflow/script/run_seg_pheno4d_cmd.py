@@ -9,7 +9,7 @@ parser.add_argument('--alias', type=str, required=False,
 parser.add_argument('--gpu', type=int, required=False, default=0)
 parser.add_argument('--mode', type=str, required=False, default='randinit')
 parser.add_argument('--ckpt', type=str, required=False,
-                    default='/home/ervin/Desktop/Thesis/O-CNN/tensorflow/script/logs/hrnet/plant3D/128.fixed/model/iter_080000.ckpt_renamed.ckpt')
+                    default='/home/ervin/Desktop/Thesis/O-CNN/tensorflow/script/logs/hrnet/plant3D/256.fixed/iter_080000.ckpt_renamed.ckpt')
 
 args = parser.parse_args()
 alias = args.alias
@@ -22,14 +22,14 @@ ckpt = args.ckpt if mode != 'randinit' else '\'\''
 module = 'run_seg_pheno4d_finetune.py' if mode != 'randinit' else 'run_seg_shapenet.py'
 script = 'python %s --config configs/seg_hrnet_pheno4d_pts.yaml' % module
 if mode != 'randinit': script += ' SOLVER.mode %s ' % mode
-data = 'dataset/shapenet_segmentation/datasets_reduced_100000_partial'
+data = 'dataset/shapenet_segmentation/datasets_reduced_10000_strict_byday'
 
 
-categories= ['Tomato', 'Maize']
-seg_num   = [2, 2]
-train_num = [68, 39]
-test_num =  [9, 10]
-max_iters = [3000, 3000]
+categories= ['T01', 'T02', 'T03', 'T04', 'T05', 'T06', 'T07', 'M01', 'M02', 'M03', 'M04', 'M05', 'M06', 'M07']
+seg_num   = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+train_num = [6, 6, 6, 6, 7, 7, 7, 4, 4, 4, 4, 3, 3, 3]
+test_num =  [5, 5, 5, 5, 4, 4, 4, 3, 3, 3, 3, 4, 4, 4]
+max_iters = [500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500]
 #           [22012,  581,  412,  6722, 28612,  516,  5869, 2925, 
 #            11822, 3441, 1416,  1369,  2194,  506,  1134, 41447] 
 test_iters= [100, 100]
@@ -43,7 +43,8 @@ for i in range(len(ratios)):
     ratio, cat = ratios[i], categories[k]
     max_iter = int(max_iters[k] * ratio * muls[i])
     step_size1, step_size2 = int(0.5 * max_iter), int(0.25 * max_iter)
-    test_every_iter = int(test_iters[k] * ratio * muls[i])
+    #test_every_iter = int(test_iters[k] * ratio * muls[i])
+    test_every_iter = 2
     take = int(math.ceil(train_num[k] * ratio))
 
     cmds = [

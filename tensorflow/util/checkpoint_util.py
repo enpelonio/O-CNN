@@ -3,10 +3,10 @@ import tensorflow as tf
 import os
 
 checkpoint_path_default = '/home/ervin/Desktop/Thesis/O-CNN/tensorflow/script/dataset/midnet_data/mid_d6_o6/model/iter_800000.ckpt'
-checkpoint_path_custom = '/home/ervin/Desktop/Thesis/O-CNN/tensorflow/script/logs/hrnet/plant3D/128.fixed/model/iter_080000.ckpt'
+checkpoint_path_custom = '/home/ervin/Desktop/Thesis/O-CNN/tensorflow/script/logs/hrnet/plant3D/64r.8b.fixed/model/iter_000002.ckpt'
 
 def inspect():
-    reader = pywrap_tensorflow.NewCheckpointReader(checkpoint_path_custom+"_renamed.ckpt")
+    reader = pywrap_tensorflow.NewCheckpointReader(checkpoint_path_custom)
     var_to_shape_map = reader.get_variable_to_shape_map()
 
     for key in var_to_shape_map:
