@@ -1,6 +1,5 @@
 import os
 import shutil
-import re
 from pathlib import Path
 
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -42,10 +41,15 @@ def remove_txt_soil(filename, src_folder, des_folder):
         for line in fid:
             if line == '\n': continue
             nums = line.split()
-            if filename.startswith('M'): nums = nums[:-1]   # ignore maize 2nd label standard
-            if nums[-1] == '0': continue                    # ignore soil
-            if float(nums[-1]) > 2: nums[-1] = '2';         # set all leaves to label 2
-            nums[1], nums[2] = nums[2], nums[1]             # swap y and z axis
+            if filename.startswith('M'): nums = nums[:-1]           # ignore maize 2nd label standard
+            soil, stem = '0', '1'                                   # default labels
+            if filename.startswith('M02'): soil, stem = '0', '2'    # M02s default labels
+            if filename == 'T02_0325_a' : soil, stem = '1', '0'     # special case
+            if nums[-1] == soil: continue                           # ignore soil
+            if nums[-1] == stem: nums[-1] = '0'                     # set stem label
+            else: nums[-1] = '1'                                    # set all leaves to same label
+            nums[1], nums[2] = nums[2], nums[1]                     # swap y and z axis
+            nums[0] = str(float(nums[0]) * -1)                      # inverse x axis
             lines.append(' '.join(nums))
         
     ply_content = '\n'.join(lines)
