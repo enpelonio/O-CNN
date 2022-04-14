@@ -1,177 +1,35 @@
 import argparse
 import os
+import pheno4d_utils
 import shutil
-import re
-import datetime
+import atexit
 from pathlib import Path
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--file', type = str, required = True,
+                    help = 'ex. --file /models/file.ply')
 parser.add_argument('--target', type = int, required = False,
                     help = 'ex. --target 100000',
                     default = 100000)
 args = parser.parse_args()
 
+filepath = os.path.join(args.file)
 target = args.target
+cloudcompare = pheno4d_utils.get_cloudcompare()
+filepath_copy = pheno4d_utils.ply_duplicate(filepath)
 
-project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-current_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-#root_folder = os.path.join(current_path, 'script/dataset/shapenet_segmentation')
-root_folder = os.path.join(current_path, 'script/dataset/pheno4d_segmentation')
-dataset_folder = 'ply'
-ply_folder = os.path.join(root_folder, dataset_folder)
-reduced_folder = os.path.join(root_folder, 'ply_reduced_' + str(target))
-cc_header_folder = os.path.join(root_folder, 'cc_header_' + str(target))
-#cloudcompare = 'cloudcompare.CloudCompare'
-cloudcompare = 'D:\Code\Research\O-CNN\cloudcompare\CloudCompare_v2.12.beta_bin_x64\CloudCompare.exe'
-
-# categories = ['Maize01', 'Maize02', 'Maize03', 'Maize04', 'Maize05', 'Maize06', 'Maize07',
-#               'Tomato01', 'Tomato02', 'Tomato03', 'Tomato04', 'Tomato05', 'Tomato06', 'Tomato07']
-categories = ['Maize', 'Tomato']
-
-unprocessed = []
-
-def check_cloudcompare():
-  if not(Path(cloudcompare).is_file()):
-    print('CloudCompare.exe not found.')
-    quit()
-
-def modify_ply_header_cc():
-  print('\nModify ply files header ...')
-  header = 'ply\nformat ascii 1.0\nelement vertex %d\n' + \
-           'property float x\nproperty float y\nproperty float z\n' + \
-           'property float nx\nproperty float ny\nproperty float nz\n' + \
-           'property float scalar_label\nelement face 0\n' + \
-           'property list uchar int vertex_indices\nend_header'
-  for i, c in enumerate(categories):
-    src_folder = os.path.join(ply_folder, c)
-    des_folder = os.path.join(cc_header_folder, c)
-    if not os.path.exists(des_folder): os.makedirs(des_folder)
-
-    filenames = os.listdir(src_folder)
-    for filename in filenames:
-      print(filename)
-      filename_ply = os.path.join(src_folder, filename)
-      filename_cc = os.path.join(des_folder, filename)
-      ply_header = False
-      with open(filename_ply, 'r') as fid:
-        lines = []
-        for line in fid:
-          if line == '\n': continue
-          nums = line.split()
-          if nums[0] == 'end_header':
-            ply_header = True
-            continue
-          if(not(ply_header)): continue
-          lines.append(' '.join(nums))
-
-      ply_header = header % len(lines)
-      ply_content = '\n'.join([ply_header] + lines)
-      with open(filename_cc, 'w') as fid:
-        fid.write(ply_content)
-
-def reduce_points():
-  print('\nReduce points ...')
-  for i, c in enumerate(categories):
-    src_folder = os.path.join(cc_header_folder, c)
-    des_folder = os.path.join(reduced_folder, c)
-    if not os.path.exists(des_folder): os.makedirs(des_folder)
-
-    filenames = os.listdir(src_folder)
-    for filename in filenames:
-      filename_ply = os.path.join(src_folder, filename)
-      filename_reduced_ply = os.path.join(src_folder, filename[:-4] + '_REDUCED.ply')
-      filename_reduced = os.path.join(des_folder, filename[:-4] + '.ply')
-      if Path(filename_reduced).is_file(): continue # skip if reduced file exists
-      cmd = 'python reduce_points2.py --cloudcompare %s --file %s --target %s' % (cloudcompare, filename_ply, str(target))
-      print(cmd)
-      os.system(cmd)
-      if not(Path(filename_reduced_ply).is_file()):
-        unprocessed.append(filename)
-        continue
-      shutil.move(filename_reduced_ply, filename_reduced)
-
-def modify_ply_header():
-  print('\nModify ply files header ...')
-  header = 'ply\nformat ascii 1.0\nelement vertex %d\n' + \
-           'property float x\nproperty float y\nproperty float z\n' + \
-           'property float nx\nproperty float ny\nproperty float nz\n' + \
-           'property float label\nelement face 0\n' + \
-           'property list uchar int vertex_indices\nend_header'
-  for i, c in enumerate(categories):
-    src_folder = os.path.join(reduced_folder, c)
-
-    filenames = os.listdir(src_folder)
-    for filename in filenames:
-      print(filename)
-      filename_ply = os.path.join(src_folder, filename)
-      ply_header = False
-      with open(filename_ply, 'r') as fid:
-        lines = []
-        for line in fid:
-          if line == '\n': continue
-          nums = line.split()
-          if nums[0] == 'end_header':
-            ply_header = True
-            continue
-          if(not(ply_header)): continue
-          lines.append(' '.join(nums))
-
-      ply_header = header % len(lines)
-      ply_content = '\n'.join([ply_header] + lines)
-      with open(filename_ply, 'w') as fid:
-        fid.write(ply_content)
-
-def compute_stats():
-  print('\nCompute stats ...')
-  max_points = 0
-  min_points = 10**9
-  avg_points = 0
-  clouds = 0
-  lines = []
-  for i, c in enumerate(categories):
-    src_folder = os.path.join(reduced_folder, c)
-
-    filenames = os.listdir(src_folder)
-    clouds += len(filenames)
-    for filename in filenames:
-      filename_ply = os.path.join(src_folder, filename)
-      with open(filename_ply, 'r') as fid:
-        for line in fid:
-          if line == '\n': continue
-          nums = line.split()
-          if nums[0] == 'element' and nums[1] == 'vertex':
-            points = int(nums[2])
-            avg_points += points
-            max_points = max(max_points, points)
-            min_points = min(min_points, points)
-            lines.append('%s %s' % (filename, nums[2]))
-            break
-  avg_points /= clouds
-  log_header = 'Point clouds: ' + str(clouds) + \
-    '\nMax points: ' + str(max_points) + \
-    '\nMin points: ' + str(min_points) + \
-    '\nAverage points: ' + str(avg_points)
-  print(log_header)
-  log_content = '\n'.join([log_header] + lines)
-  filename_log = os.path.join(reduced_folder, 'log_reduced.txt')
-  with open(filename_log, 'w') as fid:
-    fid.write(log_content)
-
-def log_unprocessed():
-  if(len(unprocessed)):
-    print('\nLog unprocesed ...')
-    log_header = 'Unprocessed files: %s' % str(len(unprocessed))
-    log_content = '\n'.join([log_header] + unprocessed)
-    print(log_content)
-    filename_log = os.path.join(reduced_folder, 'log_unprocessed.txt')
-    with open(filename_log, 'w') as fid:
-      fid.write(log_content)
+def on_exit():
+  if Path(filepath_copy).is_file: os.remove(filepath_copy)
+atexit.register(on_exit)
 
 if __name__ == '__main__':
-  check_cloudcompare()
-  modify_ply_header_cc()
-  reduce_points()
-  shutil.rmtree(cc_header_folder)
-  modify_ply_header()
-  compute_stats()
-  log_unprocessed()
+  pheno4d_utils.ply_label2scalar(filepath_copy)
+  cmd = 'python reduce_points.py --cloudcompare %s --file %s --target %s' % (cloudcompare, filepath_copy, str(target))
+  print(cmd)
+  os.system(cmd)
+  filename, file_extension = os.path.splitext(filepath)
+  filename_copy, file_extension_copy = os.path.splitext(filepath_copy)
+  filepath_reduced = filename + '_REDUCED' + file_extension
+  filepath_reduced_temp = filename_copy + '_REDUCED' + file_extension_copy
+  shutil.move(filepath_reduced_temp, filepath_reduced)
+  pheno4d_utils.ply_scalar2label(filepath_reduced)

@@ -1,93 +1,31 @@
+import argparse
 import os
+import pheno4d_utils
 import shutil
-import re
+import atexit
 from pathlib import Path
 
-project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-current_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-current_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-root_folder = os.path.join(current_path, 'script/dataset/pheno4d_segmentation')
-dataset_folder = 'Pheno4D'
-txt_folder = os.path.join(root_folder, dataset_folder)
-ply_folder = os.path.join(root_folder, 'ply')
-cloudcompare = os.path.join(project_root, 'cloudcompare/CloudCompare_v2.12.beta_bin_x64/CloudCompare.exe')
+parser = argparse.ArgumentParser()
+parser.add_argument('--file', type = str, required = True,
+                    help = 'ex. --file /models/file.ply')
+args = parser.parse_args()
 
-categories = ['Maize01', 'Maize02', 'Maize03', 'Maize04', 'Maize05', 'Maize06', 'Maize07',
-              'Tomato01', 'Tomato02', 'Tomato03', 'Tomato04', 'Tomato05', 'Tomato06', 'Tomato07']
+filepath = os.path.join(args.file)
+cloudcompare = pheno4d_utils.get_cloudcompare()
+filepath_copy = pheno4d_utils.ply_duplicate(filepath)
 
-def process_pheno4d():
-    for c in categories:
-        src_folder = os.path.join(txt_folder, c)
-        des_folder_maize = os.path.join(ply_folder, 'Maize')
-        des_folder_tomato = os.path.join(ply_folder, 'Tomato')
-        if not os.path.exists(des_folder_maize): os.makedirs(des_folder_maize)
-        if not os.path.exists(des_folder_tomato): os.makedirs(des_folder_tomato)
-
-        filenames = os.listdir(src_folder)
-        for filename in filenames:
-            if(Path(filename).stem.endswith('a')):  # file is labeled
-                print(filename)
-                des_folder = des_folder_maize if filename.startswith('M') else des_folder_tomato
-                filename_ply = filename[:-4] + '.ply'
-                remove_txt_soil(filename, src_folder, des_folder)
-                compute_txt_normals(filename, des_folder, des_folder)
-                delete_txt_normals(filename, des_folder)
-                modify_ply_header(filename_ply, des_folder)
-
-def remove_txt_soil(filename, src_folder, des_folder):
-    filename_txt = os.path.join(src_folder, filename)
-    filename_txt_no_soil = os.path.join(des_folder, filename)
-    with open(filename_txt, 'r') as fid:
-        lines = []
-        for line in fid:
-            if line == '\n': continue
-            nums = line.split()
-            if filename.startswith('M'): nums = nums[:-1]   # ignore maize 2nd label standard
-            if nums[-1] == '0': continue                    # ignore soil
-            if float(nums[-1]) > 2: nums[-1] = '2';         # set all leaves to label 2
-            nums[1], nums[2] = nums[2], nums[1]             # swap y and z axis
-            lines.append(' '.join(nums))
-        
-    ply_content = '\n'.join(lines)
-    with open(filename_txt_no_soil, 'w') as fid:
-        fid.write(ply_content)
-
-def compute_txt_normals(filename, src_folder, des_folder):
-    filename_txt = os.path.join(src_folder, filename)
-    filename_normals_ply = os.path.join(src_folder, filename[:-4] + '_OCTREE_NORMALS.ply')
-    filename_ply = os.path.join(des_folder, filename[:-4] + '.ply')
-    cmd = 'python compute_normals.py --cloudcompare %s --file %s' % (cloudcompare, filename_txt)
-    print(cmd)
-    os.system(cmd)
-    shutil.move(filename_normals_ply, filename_ply)
-
-def modify_ply_header(filename, src_folder):
-    filename_ply = os.path.join(src_folder, filename[:-4] + '.ply')
-    header = 'ply\nformat ascii 1.0\nelement vertex %d\n' + \
-            'property float x\nproperty float y\nproperty float z\n' + \
-            'property float nx\nproperty float ny\nproperty float nz\n' + \
-            'property float label\nelement face 0\n' + \
-            'property list uchar int vertex_indices\nend_header'
-    ply_header = False
-    with open(filename_ply, 'r') as fid:
-        lines = []
-        for line in fid:
-            if line == '\n': continue
-            nums = line.split()
-            if nums[0] == 'end_header':
-                ply_header = True
-                continue
-            if(not(ply_header)): continue
-            lines.append(' '.join(nums))
-
-    ply_header = header % len(lines)
-    ply_content = '\n'.join([ply_header] + lines)
-    with open(filename_ply, 'w') as fid:
-        fid.write(ply_content)
-
-def delete_txt_normals(filename, src_folder):
-    filename_txt = os.path.join(src_folder, filename)
-    os.remove(filename_txt)
+def on_exit():
+  if Path(filepath_copy).is_file: os.remove(filepath_copy)
+atexit.register(on_exit)
 
 if __name__ == '__main__':
-  process_pheno4d()
+  pheno4d_utils.remove_soil(filepath_copy)
+  cmd = 'python compute_normals.py --cloudcompare %s --file %s' % (cloudcompare, filepath_copy)
+  print(cmd)
+  os.system(cmd)
+  filename, file_extension = os.path.splitext(filepath)
+  filename_copy, file_extension_copy = os.path.splitext(filepath_copy)
+  filepath_normals = filename + '_NORMALS.ply'
+  filepath_normals_temp = filename_copy + '_NORMALS.ply'
+  shutil.move(filepath_normals_temp, filepath_normals)
+  pheno4d_utils.ply_scalar2label(filepath_normals)
