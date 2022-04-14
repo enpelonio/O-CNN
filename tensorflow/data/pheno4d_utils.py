@@ -57,3 +57,33 @@ def get_cloudcompare():
   
   elif os.name == 'posix':
     return 'cloudcompare.CloudCompare'
+
+def remove_soil(filepath):
+  filename, file_extension = os.path.splitext(os.path.basename(filepath))
+  label_0_2 = ['M02_0313_a', 'M02_0315_a', 'M02_0317_a', 'M02_0319_a', 'M02_0321_a', 'M02_0324_a', 'M02_0325_a']
+  label_0_3 = ['M03_0321_a']
+  label_0_4 = ['M03_0324_a']
+  with open(filepath, 'r') as fid:
+        lines = []
+        for line in fid:
+            if line == '\n': continue
+            nums = line.split()
+            if filename.startswith('M'): nums = nums[:-1]                 # ignore maize 2nd label standard
+            soil, stem = '0', '1'                                         # default labels
+            for s in label_0_2:
+              if filename.startswith(s): soil, stem = '0', '2'
+            for s in label_0_3:
+              if filename.startswith(s): soil, stem = '0', '3'
+            for s in label_0_4:
+              if filename.startswith(s): soil, stem = '0', '4'
+            if filename.startswith('T02_0325_a') : soil, stem = '1', '0'  # special case
+            if nums[-1] == soil: continue                                 # ignore soil
+            if nums[-1] == stem: nums[-1] = '0'                           # set stem label
+            else: nums[-1] = '1'                                          # set all leaves to same label
+            nums[1], nums[2] = nums[2], nums[1]                           # swap y and z axis
+            nums[0] = str(float(nums[0]) * -1)                            # inverse x axis
+            lines.append(' '.join(nums))
+
+  content = '\n'.join(lines)
+  with open(filepath, 'w') as fid:
+      fid.write(content)
