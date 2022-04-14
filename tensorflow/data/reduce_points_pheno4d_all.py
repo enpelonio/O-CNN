@@ -9,7 +9,7 @@ import time
 start_time = time.time()
 parser = argparse.ArgumentParser()
 parser.add_argument('--target', type = int, required = False,
-                    help = 'ex. --target 100000',
+                    help = 'ex. --target 10000',
                     default = 100000)
 args = parser.parse_args()
 target = args.target
