@@ -24,7 +24,7 @@ atexit.register(on_exit)
 
 if __name__ == '__main__':
   pheno4d_utils.ply_label2scalar(filepath_copy)
-  cmd = 'python reduce_points2.py --cloudcompare %s --file %s --target %s' % (cloudcompare, filepath_copy, str(target))
+  cmd = 'python reduce_points.py --cloudcompare %s --file %s --target %s' % (cloudcompare, filepath_copy, str(target))
   print(cmd)
   os.system(cmd)
   filename, file_extension = os.path.splitext(filepath)
