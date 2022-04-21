@@ -1,0 +1,38 @@
+# Parameters for evaluation
+# Some look unncessary but idk if naa ba na siayy effect
+
+SOLVER:
+  gpu: 0,
+  logdir: logs/evals/
+  max_iter: 3000
+  test_iter: 36
+  test_every_iter: 50
+  step_size: (1500, 750)
+
+DATA:
+  test: 
+    dtype: points
+    distort: False  # no data augmentation
+    depth: 6
+    axis: y 
+    angle: (1, 1, 1)
+    interval: (1, 1, 1)
+    scale: 0.125
+    jitter: 0.125
+    offset: 0.0
+    node_dis: True
+    shuffle: 0
+    batch_size: 1
+    x_alias: data
+    return_pts: True
+
+
+MODEL:
+  name: hrnet
+  channel: 4
+  nout: 15
+  depth: 6
+  factor: 2
+  signal_abs: True
+  depth_out: 6
+

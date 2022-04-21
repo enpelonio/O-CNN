@@ -3,7 +3,7 @@ import tensorflow as tf
 import os
 
 checkpoint_path_default = '/home/ervin/Desktop/Thesis/O-CNN/tensorflow/script/dataset/midnet_data/mid_d6_o6/model/iter_800000.ckpt'
-checkpoint_path_custom = '/home/ervin/Desktop/Thesis/O-CNN/tensorflow/script/logs/hrnet/plant3D/64r.8b.fixed/model/iter_000002.ckpt'
+checkpoint_path_custom = '/home/ervin/Desktop/Thesis/O-CNN/tensorflow/script/logs/seg/finetune_byday_128r32b_iter20000/M0313/ratio_1.00/model/iter_000302.ckpt'
 
 def inspect():
     reader = pywrap_tensorflow.NewCheckpointReader(checkpoint_path_custom)
@@ -58,6 +58,26 @@ def fix2():
     for old_name in reader.get_variable_to_shape_map():
         if old_name != 'solver/global_step' and 'solver/' in old_name:
             new_name = old_name.replace('solver/','')
+        else:
+            new_name = old_name
+        new_checkpoint_vars[new_name] = tf.Variable(reader.get_tensor(old_name))
+
+    init = tf.global_variables_initializer()
+    saver = tf.train.Saver(new_checkpoint_vars)
+
+    with tf.Session() as sess:
+        sess.run(init)
+        saver.save(sess, NEW_CHECKPOINT_FILE)
+
+def fix_predict_6():
+    NEW_CHECKPOINT_FILE = checkpoint_path_custom+"_renamed.ckpt"
+
+    new_checkpoint_vars = {}
+    reader = tf.train.NewCheckpointReader(checkpoint_path_custom)
+
+    for old_name in reader.get_variable_to_shape_map():
+        if 'predict_6' in old_name:
+            new_name = old_name.replace('predict_6','predict_5')
         else:
             new_name = old_name
         new_checkpoint_vars[new_name] = tf.Variable(reader.get_tensor(old_name))

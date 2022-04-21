@@ -65,6 +65,9 @@ class TFSolver:
 
   def initialize(self, sess):
     sess.run(tf.global_variables_initializer())
+    # allVars = tf.global_variables()
+    # for var in allVars:
+    #   print(var.name)
 
   def run_k_iterations(self, sess, k, tensors):
     num = len(tensors)
@@ -225,6 +228,9 @@ class TFSolver:
       reports += '%s: %0.4f; ' % (self.test_names[j], avg_test[j])
     print(reports)
     self.summ2txt(avg_test, 'ALL')
+  
+  def evaluate(self):
+    raise NotImplementedError
 
   def run(self):
     eval('self.{}()'.format(self.flags.run))

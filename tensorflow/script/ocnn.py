@@ -297,7 +297,7 @@ def average_tensors(tower_tensors):
 
 
 def solver_single_gpu(total_loss, learning_rate_handle, gpu_num=1):
-  with tf.variable_scope('solver'):
+  with tf.name_scope('solver'):
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     with tf.control_dependencies(update_ops):
       global_step = tf.Variable(0, trainable=False, name='global_step')
@@ -404,7 +404,7 @@ def run_k_iterations(sess, k, tensors):
   return avg_results
 
 
-def tf_IoU_per_shape(pred, label, class_num, mask=-1):
+def tf_IoU_per_shape(pred, label, class_num, mask=-1): #add plus 1 later to class_num because we do not have 0 label
   with tf.name_scope('IoU'):
     label_mask = label > mask  # filter label -1
     pred = tf.boolean_mask(pred, label_mask)

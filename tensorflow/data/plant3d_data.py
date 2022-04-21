@@ -27,7 +27,7 @@ except:
 
 
 source_parent_folder = "/home/ervin/Desktop/Thesis/Dataset/Plant3DArchitectures/"
-points_parent_folder = "/home/ervin/Desktop/Thesis/Dataset/Plant3DSamplePoints/"
+points_parent_folder = "/home/ervin/Desktop/Thesis/Dataset/Plant3DTomato/"
 
 def convert_to_points():
     select = 0 # number of files to be preprocessed 0 means all

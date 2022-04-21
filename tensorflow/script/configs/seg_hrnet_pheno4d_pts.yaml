@@ -2,7 +2,7 @@
 
 SOLVER:
   gpu: 0,
-  logdir: logs/seg/pheno4d-tomato.128rpre.32b.reduced_10000_strict
+  logdir: logs/seg/pheno4d-tomato.246rpre.32b.reduced_50000
   max_iter: 3000
   test_iter: 36
   test_every_iter: 50
@@ -21,7 +21,8 @@ DATA:
     offset: 0.0
     uniform: True
     node_dis: True
-    location: dataset/shapenet_segmentation/datasets_reduced_10000_strict_byday/T01_train_val.tfrecords
+    #location: dataset/shapenet_segmentation/datasets_reduced_10000_byday/M0315_train_val.tfrecords
+    location: dataset/shapenet_segmentation/datasets_reduced_10000_byplant/Maize_train_val.tfrecords # for by plant
     batch_size: 16
     x_alias: data
     # mask_ratio: 0.5
@@ -38,7 +39,8 @@ DATA:
     jitter: 0.125
     offset: 0.0
     node_dis: True
-    location: dataset/shapenet_segmentation/datasets_reduced_10000_strict_byday/T01_test.tfrecords
+    #location: dataset/shapenet_segmentation/datasets_reduced_10000_byday/M0315_test.tfrecords
+    location: dataset/shapenet_segmentation/datasets_reduced_10000_byplant/Maize_test.tfrecords # for by plant
     shuffle: 0
     batch_size: 1
     x_alias: data
@@ -55,5 +57,6 @@ MODEL:
   depth_out: 6
 
 LOSS:
-  num_class: 14
+  #num_class: 18 # by day classification
+  num_class : 2 # by plant 
   weight_decay: 0.0005

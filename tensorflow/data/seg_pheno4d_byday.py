@@ -11,13 +11,30 @@ root_folder = os.path.join(current_path, 'script/dataset/shapenet_segmentation')
 ply2points = 'ply2points'
 convert_tfrecords = os.path.join(current_path, 'util/convert_tfrecords.py')
 
-txt_folder = os.path.join(root_folder, 'txt_reduced_10000_strict_byday')
-ply_folder = os.path.join(root_folder, 'ply_reduced_10000_strict_byday')
-points_folder = os.path.join(root_folder, 'points_reduced_10000_strict_byday')
-dataset_folder = os.path.join(root_folder, 'datasets_reduced_10000_strict_byday')
+txt_folder = os.path.join(root_folder, 'txt_reduced_10000_byday')
+ply_folder = os.path.join(root_folder, 'ply_reduced_10000_byday')
+points_folder = os.path.join(root_folder, 'points_reduced_10000_byday')
+dataset_folder = os.path.join(root_folder, 'datasets_reduced_10000_byday')
 
-categories= ['T01', 'T02', 'T03', 'T04', 'T05', 'T06', 'T07', 'M01', 'M02', 'M03', 'M04', 'M05', 'M06', 'M07']
-seg_num   = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+categories= ['T0315', 'T0325', 'T0321', 'T0305', 'T0311', 'T0324', 'T0313', 'T0317', 'T0307', 'T0319', 'T0309', 
+'M0315', 'M0325', 'M0321', 'M0324', 'M0313', 'M0317', 'M0319',]
+seg_num   = [2] * len(categories)
+
+
+def create_ply_folder_byday():
+  not_byday_ply = os.path.join(root_folder, 'ply_reduced_10000')
+  files = getListOfFiles(not_byday_ply)
+  if not os.path.isdir(ply_folder):
+    os.mkdir(ply_folder)
+  for cat in categories:
+    cat_path = os.path.join(ply_folder,cat)
+    if not os.path.isdir(cat_path):
+      os.mkdir(cat_path)
+    kind = 'Tomato' if cat[0] == 'T' else 'Maize'
+    week = cat[1:]
+    for file in files:
+      if kind in file and week in file:
+        shutil.copy2(file,cat_path)
 
 
 def ply_to_points():
@@ -42,11 +59,6 @@ def ply_to_points():
     print(cmd + '\n')
     os.system(cmd)
 
-def split_data_by_day(day):
-  file_list = getListOfFilesByDay(points_folder,day)
-  train, test = train_test_split(file_list, test_size=0.4, random_state = 42)
-  return train,test
-
 def getListOfFiles(dirName):
     # create a list of file and sub directories 
     # names in the given directory 
@@ -60,66 +72,21 @@ def getListOfFiles(dirName):
         if os.path.isdir(fullPath):
             allFiles = allFiles + getListOfFiles(fullPath)
         else:
-            allFiles.append(getSafeFileNameWithoutExt(fullPath))
+            allFiles.append(fullPath)
                 
     return allFiles
-
-def getListOfFilesByDay(dirName, day):
-  listOfFile = os.listdir(dirName)
-  allFiles = list()
-    # Iterate over all the entries
-  for entry in listOfFile:
-    # Create full path
-    fullPath = os.path.join(dirName, entry)
-    # If entry is a directory then get the list of files in this directory 
-    if os.path.isdir(fullPath):
-        allFiles = allFiles + getListOfFiles(fullPath)
-    else:
-        allFiles.append(getSafeFileNameWithoutExt(fullPath))
-                
-  return [file for file in allFiles if 'M'+day in file or 'T'+day in file]
-
-def getSafeFileNameWithoutExt(file:str):
-    start_index=-1
-    
-    for category in categories:
-      start_index = safeFind(file,category)
-      if start_index != -1:
-        break
-    end_index = file.rindex('.')
-    return file[start_index:end_index]
-
-def safeFind(string:str, substr:str):
-  res = -1
-  try:
-    res = string.find(substr)
-  except:
-    pass
-  return res
 
 def points_to_tfrecords():
   print('Convert points files to tfrecords files ...')
   if not os.path.exists(dataset_folder): os.makedirs(dataset_folder)
   list_folder     = os.path.join(txt_folder, 'train_test_split')
   if not os.path.exists(list_folder): os.makedirs(list_folder)
-  
-  train_1, test_1 = split_data_by_day('01')
-  train_2, test_2 = split_data_by_day('02')
-  train_3, test_3 = split_data_by_day('03')
-  train_4, test_4 = split_data_by_day('04')
-  train_5, test_5 = split_data_by_day('05')
-  train_6, test_6 = split_data_by_day('06')
-  train_7, test_7 = split_data_by_day('07')
 
   for i, c in enumerate(categories):
     filelist_name = os.path.join(list_folder, c + '_train_val.txt')
-    filelist = ['%s.points %d' % (line, i) for line in train_1 if c in line] + \
-               ['%s.points %d' % (line, i) for line in train_2 if c in line] + \
-               ['%s.points %d' % (line, i) for line in train_3 if c in line] + \
-               ['%s.points %d' % (line, i) for line in train_4 if c in line] + \
-               ['%s.points %d' % (line, i) for line in train_5 if c in line] + \
-               ['%s.points %d' % (line, i) for line in train_6 if c in line] + \
-               ['%s.points %d' % (line, i) for line in train_7 if c in line]
+    class_files = getListOfFiles(os.path.join(points_folder,c))
+    train,test = train_test_split(class_files, test_size=0.4, random_state = 42)
+    filelist = ['%s %d' % (line, i) for line in train]
     print(filelist)
     with open(filelist_name, 'w') as fid:
       fid.write('\n'.join(filelist))
@@ -134,13 +101,8 @@ def points_to_tfrecords():
     os.system(cmd)
 
     filelist_name = os.path.join(list_folder, c + '_test.txt')
-    filelist = ['%s.points %d' % (line, i) for line in test_1 if c in line] + \
-               ['%s.points %d' % (line, i) for line in test_2 if c in line] + \
-               ['%s.points %d' % (line, i) for line in test_3 if c in line] + \
-               ['%s.points %d' % (line, i) for line in test_4 if c in line] + \
-               ['%s.points %d' % (line, i) for line in test_5 if c in line] + \
-               ['%s.points %d' % (line, i) for line in test_6 if c in line] + \
-               ['%s.points %d' % (line, i) for line in test_7 if c in line]
+    filelist = ['%s %d' % (line, i) for line in test]
+    
     with open(filelist_name, 'w') as fid:
       fid.write('\n'.join(filelist))
 
@@ -157,7 +119,6 @@ def points_to_tfrecords():
     shutil.copytree(list_folder, des_folder)
 
 if __name__ == '__main__':
-  #ply_to_points()
+  create_ply_folder_byday()
+  ply_to_points()
   points_to_tfrecords()
-  #split_data()
-  #print(getListOfFiles(points_folder))
